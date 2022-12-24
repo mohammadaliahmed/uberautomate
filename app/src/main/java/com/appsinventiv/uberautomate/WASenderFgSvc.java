@@ -7,6 +7,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -76,10 +77,10 @@ public class WASenderFgSvc extends Service {
     @SuppressLint("ApplySharedPref")
     private void send() {
 
-        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.ubercab");
-        if (launchIntent != null) {
-            startActivity(launchIntent);//null pointer check in case package name was not found
-        }
+        Intent intent = new Intent(Intent.ACTION_MAIN);
+        intent.setComponent(new ComponentName("com.ubercab","com.ubercab.presidio.app.core.root.RootActivity"));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(intent);
 
 //        if (progress >= recipientList.size()) {
 //            Toast.makeText(this, "Task Completed", Toast.LENGTH_SHORT).show();
