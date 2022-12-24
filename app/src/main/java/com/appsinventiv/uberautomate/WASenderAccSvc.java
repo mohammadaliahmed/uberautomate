@@ -7,6 +7,7 @@ import android.accessibilityservice.AccessibilityServiceInfo;
 import android.accessibilityservice.GestureDescription;
 import android.content.Intent;
 import android.graphics.Path;
+import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -122,6 +123,27 @@ public class WASenderAccSvc extends AccessibilityService {
 
         AccessibilityNodeInfo products = getRootInActiveWindow().findAccessibilityNodeInfosByViewId("com.ubercab:id/ub__product_selection").get(0);
         //product list shown
+
+//        Thread.sleep(2000);
+//        Path path = new Path();
+//        path.moveTo(500,1500);
+//
+//        path.lineTo(500, 100);
+//
+//        GestureDescription.StrokeDescription sd = new GestureDescription.StrokeDescription(path, 0, 20);
+//
+//        dispatchGesture(new GestureDescription.Builder().addStroke(sd).build(), new AccessibilityService.GestureResultCallback() {
+//
+//            @Override
+//            public void onCompleted(GestureDescription gestureDescription) {
+//                super.onCompleted(gestureDescription);
+//            }
+//
+//            @Override
+//            public void onCancelled(GestureDescription gestureDescription) {
+//                super.onCancelled(gestureDescription);
+//            }
+//        }, null);
 
 
         AccessibilityNodeInfo vehicle = products.getChild(child);
