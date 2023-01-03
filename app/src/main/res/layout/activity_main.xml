@@ -12,12 +12,19 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:text="Start" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:text="Not connected"
+        android:id="@+id/msg"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/accessibility"
+        android:layout_height="wrap_content"/>
 
     <Button
-        android:layout_centerHorizontal="true"
         android:id="@+id/accessibility"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
 
         android:text="Accessibility" />
     <Button

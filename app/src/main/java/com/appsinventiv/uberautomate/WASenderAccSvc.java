@@ -1,6 +1,7 @@
 package com.appsinventiv.uberautomate;
 
 import static android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK;
+import static android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
@@ -18,8 +19,16 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Toast;
 
 import androidx.annotation.RequiresApi;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.appsinventiv.uberautomate.Model.ApiResponse;
+import com.appsinventiv.uberautomate.Model.Constants;
 
 import java.util.HashMap;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class WASenderAccSvc extends AccessibilityService {
     int counter = 1;
@@ -43,13 +52,19 @@ public class WASenderAccSvc extends AccessibilityService {
         info.notificationTimeout = 100;
 
         this.setServiceInfo(info);
-        Log.d("loog", "connected");
+        Log.d("loog", "uber automate connected");
+        Toast.makeText(this, "connected", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent("custom-event-name");
+        // You can also include some extra data.
+        intent.putExtra("message", "connected");
+        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        if (MainActivity.counter <= MainActivity.itemlist.size()) {
+
+        if (!Constants.WORK) {
             if (!PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("running", false)) {
                 return;
             }
@@ -76,7 +91,7 @@ public class WASenderAccSvc extends AccessibilityService {
                             .findAccessibilityNodeInfosByViewId("com.ubercab:id/ub__location_edit_search_pickup_edit").get(0);
                     Bundle arguments = new Bundle();
                     arguments.putCharSequence(AccessibilityNodeInfo
-                            .ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, MainActivity.itemlist.get(MainActivity.counter).getPickup());
+                            .ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, MainActivity.data.getStartingPoint());
                     pickupEt.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments);
                     Log.d("loog", "pickUpEntered");
                     Thread.sleep(1500);
@@ -89,7 +104,7 @@ public class WASenderAccSvc extends AccessibilityService {
                                 .findAccessibilityNodeInfosByViewId("com.ubercab:id/ub__location_edit_search_destination_edit").get(0);
                         Bundle arguments2 = new Bundle();
                         arguments2.putCharSequence(AccessibilityNodeInfo
-                                .ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, MainActivity.itemlist.get(MainActivity.counter).getDroppoff());
+                                .ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, MainActivity.data.getEndingPoint());
                         dropOffLocation.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, arguments2);
                         Thread.sleep(1500);
                         Log.d("loog", "dropOffLocation");
@@ -115,36 +130,17 @@ public class WASenderAccSvc extends AccessibilityService {
 
             }
         }
-
     }
+
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void getRideData(int child) throws InterruptedException {
 
         AccessibilityNodeInfo products = getRootInActiveWindow().findAccessibilityNodeInfosByViewId("com.ubercab:id/ub__product_selection").get(0);
+
         //product list shown
 
-//        Thread.sleep(2000);
-//        Path path = new Path();
-//        path.moveTo(500,1500);
 //
-//        path.lineTo(500, 100);
-//
-//        GestureDescription.StrokeDescription sd = new GestureDescription.StrokeDescription(path, 0, 20);
-//
-//        dispatchGesture(new GestureDescription.Builder().addStroke(sd).build(), new AccessibilityService.GestureResultCallback() {
-//
-//            @Override
-//            public void onCompleted(GestureDescription gestureDescription) {
-//                super.onCompleted(gestureDescription);
-//            }
-//
-//            @Override
-//            public void onCancelled(GestureDescription gestureDescription) {
-//                super.onCancelled(gestureDescription);
-//            }
-//        }, null);
-
 
         AccessibilityNodeInfo vehicle = products.getChild(child);
         vehicle.performAction(ACTION_CLICK);
@@ -177,21 +173,17 @@ public class WASenderAccSvc extends AccessibilityService {
         }
 
         Log.d("loog", "" + map);
+        Toast.makeText(this, "" + map, Toast.LENGTH_SHORT).show();
         performGlobalAction(GLOBAL_ACTION_BACK);
         performGlobalAction(GLOBAL_ACTION_BACK);
         counter++;
         Log.d("loog", "counter" + counter);
-        if (counter <= 3) {
 
-            Thread.sleep(2000);
-            getRideData(counter);
-        } else {
-            Thread.sleep(1000);
-            Log.d("loog", "going home");
-            MainActivity.counter++;
-            performGlobalAction(GLOBAL_ACTION_BACK);
-            sendNext();
-        }
+        Thread.sleep(1000);
+        Log.d("loog", "going home");
+        performGlobalAction(GLOBAL_ACTION_BACK);
+        sendNext();
+
 
     }
 
@@ -202,10 +194,29 @@ public class WASenderAccSvc extends AccessibilityService {
     }
 
     private void sendNext() {
+        Constants.WORK = true;
 
-        Intent intent = new Intent(this, WASenderFgSvc.class);
-        intent.putExtra("start", false);
-        startService(intent);
+
+        UserClient userClient = AppConfig.getRetrofit().create(UserClient.class);
+        Call<ApiResponse> call = userClient.saveData();
+        call.enqueue(new Callback<ApiResponse>() {
+            @Override
+            public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
+                if (response.isSuccessful()) {
+
+                    MainActivity.data = response.body().getData();
+                    MainActivity.sp.edit().putBoolean("running", true).apply();
+                    Intent i = new Intent(getApplicationContext(), WASenderFgSvc.class);
+                    startService(i);
+                    Constants.WORK=false;
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ApiResponse> call, Throwable t) {
+
+            }
+        });
 
 
     }
