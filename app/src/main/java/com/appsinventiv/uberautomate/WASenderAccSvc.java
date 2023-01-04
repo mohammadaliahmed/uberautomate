@@ -140,6 +140,8 @@ public class WASenderAccSvc extends AccessibilityService {
 
         //product list shown
 
+
+
 //
 
         AccessibilityNodeInfo vehicle = products.getChild(child);
